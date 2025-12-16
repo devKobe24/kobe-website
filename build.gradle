@@ -1,0 +1,42 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.12'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.kobe.website'
+version = '0.0.1-SNAPSHOT'
+description = 'kobe-website'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+    // JPA (Entity, Repository 등 사용을 위한 필수 의존성)
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // 데이터베이스 드라이버 (H2 또는 MySQL 등 하나는 반드시 필요)
+    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    // Lombok (컴파일 시점에 코드를 생성하므로 두 가지 설정이 모두 필요)
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

@@ -1,0 +1,18 @@
+file:
+  # macOS/Linux example: uploads directory under the user's home directory
+  upload-dir: ${user.home}/uploads
+
+spring:
+  application:
+    name: kobe-website
+
+  # By default, the 'dev' profile is activated to load development configuration when running locally.
+  profiles:
+    active: dev
+
+  # Common configuration for file uploads and shared settings.
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
