@@ -14,6 +14,11 @@ java {
     }
 }
 
+bootJar {
+    archiveBaseName = 'kobe-website'
+    archiveVersion = '0.0.1'
+}
+
 repositories {
     mavenCentral()
 }
@@ -32,6 +37,10 @@ dependencies {
     // Lombok (컴파일 시점에 코드를 생성하므로 두 가지 설정이 모두 필요)
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    // [추가] AWS Spring Cloud (Secrets Manager 연동용)
+    implementation platform("io.awspring.cloud:spring-cloud-aws-dependencies:3.0.4") // 버전은 호환성에 따라 조정
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager'
+
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
