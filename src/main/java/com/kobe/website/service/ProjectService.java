@@ -71,7 +71,7 @@ public class ProjectService {
         if (project.getImageUrl() != null) {
             // DB에는 "/uploads/uuid_파일명" 형태로 저장되어 있음
             // 실제 파일 경로: uploadDir + "uuid_파일명"
-            String storedFileName = project.getImageUrl().replace("/upload", "");
+            String storedFileName = project.getImageUrl().replace("/uploads", "");
             File file = new File(uploadDir + "/" + storedFileName);
 
             if (file.exists()) {
