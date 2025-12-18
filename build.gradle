@@ -16,7 +16,7 @@ java {
 
 bootJar {
     archiveBaseName = 'kobe-website'
-    archiveVersion = '0.0.3'
+    archiveVersion = '0.0.4'
 }
 
 repositories {
