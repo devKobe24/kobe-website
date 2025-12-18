@@ -1,5 +1,6 @@
 package com.kobe.website.config;
 
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -22,44 +23,48 @@ import org.springframework.security.web.SecurityFilterChain;
  */
 @Profile("dev")
 @Configuration
-@EnableWebSecurity // 스프링 시큐리티 필터 체인 활성화
+@EnableWebSecurity
 public class DevSecurityConfig {
 
     @Bean
     public SecurityFilterChain devFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. 요청 URL별 권한 설정
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers(
-                                "/login",
-                                "/css/**",
-                                "/js/**",
-                                "/images/**",
-                                "/h2-console/**"
-                                ).permitAll() // 정적 리소스 모두 허용
-                        .requestMatchers("/admin/**").authenticated() // admin 하위 경로는 무조건 인증 필요
-                        .anyRequest().permitAll() // 그 외(메인, 목록 등) 모두 접근 허용
+                        // 1. 정적 리소스 (css, js, images 등) 자동 허용
+                        .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+
+                        // 2. H2 Console 자동 허용 (PathRequest 사용)
+                        .requestMatchers(PathRequest.toH2Console()).permitAll()
+
+                        // 3. 이미지 업로드 경로 허용 (Prod와 맞춤)
+                        .requestMatchers("/uploads/**").permitAll()
+
+                        // 4. 로그인 페이지 허용
+                        .requestMatchers("/", "/login").permitAll()
+
+                        // 5. [권장] 개발 환경도 운영처럼 잠그는 것이 좋습니다. (실수 방지)
+                        // 만약 너무 불편하면 .anyRequest().permitAll() 로 되돌리셔도 됩니다.
+                        .anyRequest().authenticated()
                 )
-                // 2. 로그인 폼 설정.
                 .formLogin((form) -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/admin/dashboard", true) // 로그인 성공시 이동할 페이지
+                        .defaultSuccessUrl("/admin/dashboard", true)
                         .permitAll()
                 )
-                // 3. 로그아웃 설정
                 .logout((logout) -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/") // 로그아웃 후 메인으로 이동
+                        .logoutSuccessUrl("/")
                         .permitAll()
                 )
-                // 4. CSRF 예외 처리 (H2 Console은 POST 사용)
+                // 6. H2 Console을 위한 CSRF 예외 처리 (PathRequest 사용)
                 .csrf((csrf) -> csrf
-                        .ignoringRequestMatchers("/h2-console/**")
+                        .ignoringRequestMatchers(PathRequest.toH2Console())
                 )
-                // 5. iframe 허용 (H2 Console 필수)
+                // 7. H2 Console을 위한 X-Frame-Options 해제
                 .headers((headers) -> headers
                         .frameOptions(frame -> frame.disable())
                 );
+
         return http.build();
     }
 
