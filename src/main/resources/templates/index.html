@@ -62,9 +62,9 @@
 
             <div class="card-body d-flex flex-column">
               <h5 class="card-title fw-bold" th:text="${project.title}">프로젝트 제목</h5>
-              <p class="card-text text-muted flex-grow-1" th:text="${project.description}">
+              <div class="card-text text-muted flex-grow-1" th:utext="${@markdownUtil.toHtml(project.description)}">
                 프로젝트 설명이 들어갑니다.
-              </p>
+              </div>
 
               <div class="mt-3">
                 <a
