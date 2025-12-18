@@ -3,6 +3,7 @@ package com.kobe.website.service;
 import com.kobe.website.domain.Project;
 import com.kobe.website.dto.ProjectFormDto;
 import com.kobe.website.repository.ProjectRepository;
+import com.kobe.website.util.ImageResizeUtil;
 import io.awspring.cloud.s3.S3Template;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,6 +37,7 @@ public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final S3Template s3Template; // S3와 통신하는 핵심 도구
+    private final ImageResizeUtil imageResizeUtil; // 이미지 리사이징 유틸리티
 
     @Value("${spring.cloud.aws.s3.bucket}")
     private String bucketName;
@@ -92,14 +95,34 @@ public class ProjectService {
         String originalFilename = file.getOriginalFilename();
         String uuid = UUID.randomUUID().toString();
 
-        // S3에 저장될 파일 이름 (폴더 경로 포함)
-        // 예: uploads/uuid-original.jpg
-        String s3Key = "uploads/" + uuid + "_" + originalFilename;
+        // 원본 파일 확장자 추출
+        String extension = "jpg"; // 리사이징 시 JPEG로 통일
+        if (originalFilename != null && originalFilename.contains(".")) {
+            String originalExt = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
+            // 이미지 확장자인 경우에만 유지, 아니면 jpg로 통일
+            if (originalExt.matches("jpg|jpeg|png|gif|webp")) {
+                extension = originalExt.equals("jpeg") ? "jpg" : originalExt;
+            }
+        }
+
+        // S3에 저장될 파일 이름 (폴더 경로 포함, 확장자는 jpg로 통일)
+        // 예: uploads/uuid_originalFilename.jpg
+        String s3Key = "uploads/" + uuid + "_" + originalFilename + "." + extension;
+
+        // 이미지 리사이징 후 업로드
+        InputStream imageInputStream;
+        if (imageResizeUtil.needsResize(file)) {
+            log.info("이미지 리사이징 수행: {}", originalFilename);
+            imageInputStream = imageResizeUtil.resizeImage(file);
+        } else {
+            // 작은 이미지는 원본 그대로 사용
+            imageInputStream = file.getInputStream();
+        }
 
         // S3로 업로드
-        s3Template.upload(bucketName, s3Key, file.getInputStream());
+        s3Template.upload(bucketName, s3Key, imageInputStream);
 
-        log.info("S3 업로드 완료: {}", s3Key);
+        log.info("S3 업로드 완료: {} (리사이징: {})", s3Key, imageResizeUtil.needsResize(file));
 
         // DB에는 웹에서 접근할 경로를 저장 (나중에 이미지 불러오기용 API 경로)
         return "/" + s3Key;
